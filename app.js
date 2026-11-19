@@ -4,7 +4,7 @@
     { city: 'НН', gid: '0' },
     { city: 'ПНЗ', gid: '1635761934' }
   ];
-  const CITY_NAMES = { 'НН': 'НН · Нижний Новгород', 'ПНЗ': 'ПНЗ · Пенза' };
+  const CITY_NAMES = { 'НН': 'Нижний Новгород', 'ПНЗ': 'Пенза' };
   // Снимок листа нужен для мгновенного показа и на случай недоступности Google Sheets.
   const fallbackCsv = `Ссылка на чат,Вопрос,Решение,Тема,Подтема,Месяц
 тест,,,Возврат,Ошибка ГДС,Ноябрь
@@ -133,7 +133,7 @@
   function setData(datasets, live) {
     records = datasets.flatMap(({ city, csv }) => readRecords(csv, city));
     updateFilterOptions(); render();
-    $('#sync-status').textContent = live ? 'Синхронизированы 2 листа' : 'Снимок: НН + ПНЗ';
+    $('#sync-status').textContent = live ? 'Синхронизированы 2 листа' : 'Снимок данных: Пенза и Нижний Новгород';
     $('#updated-at').textContent = live ? `Обновлено ${new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date())}` : 'Сводка по двум городам';
   }
   async function refresh() {
@@ -146,7 +146,7 @@
         if (!readRecords(csv, city).length) throw new Error(`Лист ${city} не содержит записей`);
         return { city, csv };
       }));
-      setData(datasets, true); notify('Данные листов НН и ПНЗ обновлены');
+      setData(datasets, true); notify('Данные по Пензе и Нижнему Новгороду обновлены');
     } catch (error) {
       $('#sync-status').textContent = 'Снимок данных';
       notify('Не удалось обновить Google Таблицу. Показан последний доступный снимок данных.');
