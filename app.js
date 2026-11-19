@@ -1,6 +1,10 @@
 (() => {
-  const CSV_URL = 'https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc/export?format=csv&gid=0';
-  const SOURCE_URL = 'https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc/edit?gid=0#gid=0';
+  const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc';
+  const DATA_SOURCES = [
+    { city: 'НН', gid: '0' },
+    { city: 'ПНЗ', gid: '1635761934' }
+  ];
+  const CITY_NAMES = { 'НН': 'НН · Нижний Новгород', 'ПНЗ': 'ПНЗ · Пенза' };
   // Снимок листа нужен для мгновенного показа и на случай недоступности Google Sheets.
   const fallbackCsv = `Ссылка на чат,Вопрос,Решение,Тема,Подтема,Месяц
 тест,,,Возврат,Ошибка ГДС,Ноябрь
@@ -14,7 +18,7 @@
 тест,,,Возврат,Частичный,Ноябрь
 тест,,,выписка,Ошибка ГДС,Ноябрь`;
   const $ = (selector) => document.querySelector(selector);
-  const selectors = { topic: $('#filter-topic'), subtopic: $('#filter-subtopic'), month: $('#filter-month') };
+  const selectors = { city: $('#filter-city'), topic: $('#filter-topic'), subtopic: $('#filter-subtopic'), month: $('#filter-month') };
   let records = [];
   let toastTimer;
 
@@ -37,7 +41,7 @@
     return rows;
   }
 
-  function readRecords(csv) {
+  function readRecords(csv, city) {
     const rows = parseCsv(csv).filter(row => row.some(cell => cell.trim()));
     if (rows.length < 2) return [];
     const headers = rows[0].map(value => value.trim().toLocaleLowerCase('ru'));
@@ -47,7 +51,8 @@
     return rows.slice(1).map(row => ({
       topic: (row[topicIndex] || '').trim(),
       subtopic: (row[subtopicIndex] || '').trim(),
-      month: (row[monthIndex] || '').trim()
+      month: (row[monthIndex] || '').trim(),
+      city
     })).filter(record => record.topic || record.subtopic || record.month);
   }
 
@@ -57,24 +62,26 @@
     list.forEach(record => { if (record[key]) found.set(normalized(record[key]), record[key]); });
     return [...found.values()].sort((a, b) => a.localeCompare(b, 'ru'));
   }
-  function fillSelect(select, label, values, preserve = true) {
+  function fillSelect(select, label, values, preserve = true, formatLabel = value => value) {
     const previous = preserve ? select.value : '';
     select.replaceChildren(new Option(label, ''));
-    values.forEach(value => select.add(new Option(value, value)));
+    values.forEach(value => select.add(new Option(formatLabel(value), value)));
     select.value = values.find(value => normalized(value) === normalized(previous)) || '';
   }
   function updateFilterOptions() {
-    const topic = selectors.topic.value, subtopic = selectors.subtopic.value, month = selectors.month.value;
-    const topicRows = records.filter(row => (!subtopic || normalized(row.subtopic) === normalized(subtopic)) && (!month || normalized(row.month) === normalized(month)));
-    const subtopicRows = records.filter(row => (!topic || normalized(row.topic) === normalized(topic)) && (!month || normalized(row.month) === normalized(month)));
-    const monthRows = records.filter(row => (!topic || normalized(row.topic) === normalized(topic)) && (!subtopic || normalized(row.subtopic) === normalized(subtopic)));
+    const city = selectors.city.value, topic = selectors.topic.value, subtopic = selectors.subtopic.value, month = selectors.month.value;
+    const cityRows = records.filter(row => (!topic || normalized(row.topic) === normalized(topic)) && (!subtopic || normalized(row.subtopic) === normalized(subtopic)) && (!month || normalized(row.month) === normalized(month)));
+    const topicRows = records.filter(row => (!city || row.city === city) && (!subtopic || normalized(row.subtopic) === normalized(subtopic)) && (!month || normalized(row.month) === normalized(month)));
+    const subtopicRows = records.filter(row => (!city || row.city === city) && (!topic || normalized(row.topic) === normalized(topic)) && (!month || normalized(row.month) === normalized(month)));
+    const monthRows = records.filter(row => (!city || row.city === city) && (!topic || normalized(row.topic) === normalized(topic)) && (!subtopic || normalized(row.subtopic) === normalized(subtopic)));
+    fillSelect(selectors.city, 'Все города', distinctValues('city', cityRows), true, city => CITY_NAMES[city] || city);
     fillSelect(selectors.topic, 'Все темы', distinctValues('topic', topicRows));
     fillSelect(selectors.subtopic, 'Все подтемы', distinctValues('subtopic', subtopicRows));
     fillSelect(selectors.month, 'Все месяцы', distinctValues('month', monthRows));
   }
   function selectedRecords() {
-    const topic = normalized(selectors.topic.value), subtopic = normalized(selectors.subtopic.value), month = normalized(selectors.month.value);
-    return records.filter(row => (!topic || normalized(row.topic) === topic) && (!subtopic || normalized(row.subtopic) === subtopic) && (!month || normalized(row.month) === month));
+    const city = selectors.city.value, topic = normalized(selectors.topic.value), subtopic = normalized(selectors.subtopic.value), month = normalized(selectors.month.value);
+    return records.filter(row => (!city || row.city === city) && (!topic || normalized(row.topic) === topic) && (!subtopic || normalized(row.subtopic) === subtopic) && (!month || normalized(row.month) === month));
   }
   function renderChart(key, containerId, className) {
     const container = $(containerId), list = selectedRecords(), counts = new Map();
@@ -123,22 +130,23 @@
     const toast = $('#toast'); toast.textContent = message; toast.classList.add('show');
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
   }
-  function setData(csv, live) {
-    records = readRecords(csv);
-    Object.values(selectors).forEach(select => fillSelect(select, select === selectors.topic ? 'Все темы' : select === selectors.subtopic ? 'Все подтемы' : 'Все месяцы', distinctValues(select === selectors.topic ? 'topic' : select === selectors.subtopic ? 'subtopic' : 'month'), false));
+  function setData(datasets, live) {
+    records = datasets.flatMap(({ city, csv }) => readRecords(csv, city));
     updateFilterOptions(); render();
-    $('#sync-status').textContent = live ? 'Синхронизировано' : 'Снимок данных';
-    $('#updated-at').textContent = live ? `Обновлено ${new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date())}` : 'Сводка по таблице';
+    $('#sync-status').textContent = live ? 'Синхронизированы 2 листа' : 'Снимок: НН + ПНЗ';
+    $('#updated-at').textContent = live ? `Обновлено ${new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date())}` : 'Сводка по двум городам';
   }
   async function refresh() {
     const button = $('#refresh-button'); button.disabled = true; button.classList.add('loading');
     try {
-      const response = await fetch(CSV_URL, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const csv = await response.text();
-      const parsed = readRecords(csv);
-      if (!parsed.length) throw new Error('Таблица не содержит записей');
-      setData(csv, true); notify('Данные таблицы обновлены');
+      const datasets = await Promise.all(DATA_SOURCES.map(async ({ city, gid }) => {
+        const response = await fetch(`${SHEETS_URL}/export?format=csv&gid=${gid}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Не удалось загрузить лист ${city}: HTTP ${response.status}`);
+        const csv = await response.text();
+        if (!readRecords(csv, city).length) throw new Error(`Лист ${city} не содержит записей`);
+        return { city, csv };
+      }));
+      setData(datasets, true); notify('Данные листов НН и ПНЗ обновлены');
     } catch (error) {
       $('#sync-status').textContent = 'Снимок данных';
       notify('Не удалось обновить Google Таблицу. Показан последний доступный снимок данных.');
@@ -151,5 +159,5 @@
     Object.values(selectors).forEach(select => { select.value = ''; }); updateFilterOptions(); render();
   });
   $('#refresh-button').addEventListener('click', refresh);
-  setData(fallbackCsv, false);
+  setData(DATA_SOURCES.map(({ city }) => ({ city, csv: fallbackCsv })), false);
 })();
