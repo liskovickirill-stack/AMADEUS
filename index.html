@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="description" content="Распределение вопросов Amadeus по темам, подтемам и месяцам в процентах.">
+  <title>Вопросы Amadeus — аналитика</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#main" aria-label="Amadeus — на главную">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="brand-name">amadeus<span>insights</span></span>
+      </a>
+      <div class="side-caption">АНАЛИТИКА</div>
+      <a class="nav-item active" href="#main"><span class="nav-icon grid-icon" aria-hidden="true">▦</span>Обзор вопросов</a>
+      <div class="sidebar-bottom">
+        <div class="source-card">
+          <div class="source-icon" aria-hidden="true">↗</div>
+          <div><strong>Источник данных</strong><span>Google Таблица</span></div>
+          <a href="https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc/edit?gid=0#gid=0" target="_blank" rel="noreferrer" aria-label="Открыть исходную Google Таблицу">↗</a>
+        </div>
+        <div class="sidebar-foot"><span class="live-dot"></span><span id="sync-status">Данные загружены</span></div>
+      </div>
+    </aside>
+
+    <main id="main" class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Аналитика</span><span class="crumb-sep">/</span><strong>Вопросы Amadeus</strong></div>
+        <div class="top-actions">
+          <span class="updated" id="updated-at">Сводка по таблице</span>
+          <button class="refresh-button" id="refresh-button" type="button"><span aria-hidden="true">↻</span> Обновить</button>
+        </div>
+      </header>
+
+      <section class="page-heading">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-line"></span> СТРУКТУРА ОБРАЩЕНИЙ</div>
+          <h1>Вопросы <span>Amadeus</span></h1>
+          <p>Как распределяются обращения по темам, подтемам и месяцам</p>
+        </div>
+        <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc/edit?gid=0#gid=0" target="_blank" rel="noreferrer"><span class="sheet-link-icon" aria-hidden="true">▤</span> Открыть таблицу <span aria-hidden="true">↗</span></a>
+      </section>
+
+      <section class="summary-row" aria-label="Сводные показатели">
+        <article class="summary-card total-card">
+          <div class="summary-top"><span>Всего записей</span><span class="summary-icon">▤</span></div>
+          <div class="summary-value" id="total-count">—</div>
+          <div class="summary-foot"><span class="tiny-dot"></span>В выбранной выборке</div>
+        </article>
+        <article class="summary-card">
+          <div class="summary-top"><span>Тем</span><span class="summary-icon violet">⌘</span></div>
+          <div class="summary-value" id="topic-count">—</div>
+          <div class="summary-foot">Уникальных категорий</div>
+        </article>
+        <article class="summary-card">
+          <div class="summary-top"><span>Подтем</span><span class="summary-icon teal">⌁</span></div>
+          <div class="summary-value" id="subtopic-count">—</div>
+          <div class="summary-foot">Уникальных категорий</div>
+        </article>
+        <article class="summary-card">
+          <div class="summary-top"><span>Месяцев</span><span class="summary-icon amber">◷</span></div>
+          <div class="summary-value" id="month-count">—</div>
+          <div class="summary-foot">В данных таблицы</div>
+        </article>
+      </section>
+
+      <section class="filters" aria-label="Фильтры">
+        <div class="filter-label"><span class="filter-glyph" aria-hidden="true">☷</span><div><strong>Фильтры</strong><span>Пересчёт долей</span></div></div>
+        <label class="filter-control"><span>Тема</span><select id="filter-topic"><option value="">Все темы</option></select></label>
+        <label class="filter-control"><span>Подтема</span><select id="filter-subtopic"><option value="">Все подтемы</option></select></label>
+        <label class="filter-control"><span>Месяц</span><select id="filter-month"><option value="">Все месяцы</option></select></label>
+        <button id="clear-filters" class="clear-button" type="button">Сбросить</button>
+      </section>
+
+      <div class="section-title-row">
+        <div><h2>Распределение по категориям</h2><p>Доля от общего числа записей с учётом выбранных фильтров</p></div>
+        <div class="denominator" id="denominator">База расчёта: — записей</div>
+      </div>
+
+      <section class="distribution-grid" aria-label="Распределение в процентах">
+        <article class="distribution-card" data-group="topic">
+          <div class="card-heading"><div class="card-heading-icon topic-icon">01</div><div><h3>Тема</h3><p>Основная категория обращения</p></div><span class="card-arrow" aria-hidden="true">↗</span></div>
+          <div class="chart" id="chart-topic"></div>
+          <div class="card-foot"><span class="legend-dot topic-dot"></span><span>Доля записей по теме</span></div>
+        </article>
+        <article class="distribution-card" data-group="subtopic">
+          <div class="card-heading"><div class="card-heading-icon subtopic-icon">02</div><div><h3>Подтема</h3><p>Детализация обращений</p></div><span class="card-arrow" aria-hidden="true">↗</span></div>
+          <div class="chart" id="chart-subtopic"></div>
+          <div class="card-foot"><span class="legend-dot subtopic-dot"></span><span>Доля записей по подтеме</span></div>
+        </article>
+        <article class="distribution-card" data-group="month">
+          <div class="card-heading"><div class="card-heading-icon month-icon">03</div><div><h3>Месяц</h3><p>Распределение во времени</p></div><span class="card-arrow" aria-hidden="true">↗</span></div>
+          <div class="chart" id="chart-month"></div>
+          <div class="card-foot"><span class="legend-dot month-dot"></span><span>Доля записей за месяц</span></div>
+        </article>
+      </section>
+
+      <footer class="page-footer"><span>Проценты округлены до целых; сумма может отличаться от 100% из-за округления.</span><span>Источник: лист «Вопросы Амадеус»</span></footer>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+  </div>
+</body>
+</html>
