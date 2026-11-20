@@ -24,7 +24,7 @@
       <div class="sidebar-bottom">
         <div class="source-card">
           <div class="source-icon" aria-hidden="true">↗</div>
-          <div><strong>Источники данных</strong><span>Пенза и Нижний Новгород</span></div>
+          <div><strong>Источники данных</strong><span>Нижний Новгород</span></div>
           <a href="https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc/edit?gid=0#gid=0" target="_blank" rel="noreferrer" aria-label="Открыть исходную Google Таблицу">↗</a>
         </div>
         <div class="sidebar-foot"><span class="live-dot"></span><span id="sync-status">Данные загружены</span></div>
@@ -44,12 +44,17 @@
         <div>
           <div class="eyebrow"><span class="eyebrow-line"></span> СТРУКТУРА ОБРАЩЕНИЙ</div>
           <h1>Вопросы <span>Amadeus</span></h1>
-          <p>Сравнение вопросов Нижнего Новгорода и Пензы по темам, подтемам и месяцам</p>
+          <p>Вопросы Amadeus в Нижнем Новгороде: распределение по темам, подтемам и месяцам</p>
         </div>
         <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1IMoO0p0F0ofnoofchjTbh2s6Oq_qEfliDnTAG7Nuxrc/edit?gid=0#gid=0" target="_blank" rel="noreferrer"><span class="sheet-link-icon" aria-hidden="true">▤</span> Открыть таблицу <span aria-hidden="true">↗</span></a>
       </section>
 
       <section class="summary-row" aria-label="Сводные показатели">
+        <article class="summary-card escalation-card">
+          <div class="summary-top"><span>Эскалации · ноябрь</span><span class="summary-icon escalation-icon">↗</span></div>
+          <div class="summary-value" id="escalation-rate">—</div>
+          <div class="summary-foot" id="escalation-details">Вопросы Amadeus / чаты НН</div>
+        </article>
         <article class="summary-card total-card">
           <div class="summary-top"><span>Всего записей</span><span class="summary-icon">▤</span></div>
           <div class="summary-value" id="total-count">—</div>
@@ -74,7 +79,6 @@
 
       <section class="filters" aria-label="Фильтры">
         <div class="filter-label"><span class="filter-glyph" aria-hidden="true">☷</span><div><strong>Фильтры</strong><span>Пересчёт долей</span></div></div>
-        <label class="filter-control"><span>Город</span><select id="filter-city"><option value="">Все города</option></select></label>
         <label class="filter-control"><span>Тема</span><select id="filter-topic"><option value="">Все темы</option></select></label>
         <label class="filter-control"><span>Подтема</span><select id="filter-subtopic"><option value="">Все подтемы</option></select></label>
         <label class="filter-control"><span>Месяц</span><select id="filter-month"><option value="">Все месяцы</option></select></label>
@@ -104,7 +108,7 @@
         </article>
       </section>
 
-      <footer class="page-footer"><span>Проценты округлены до целых; сумма может отличаться от 100% из-за округления.</span><span>Источник: Google Таблица, данные двух городов</span></footer>
+      <footer class="page-footer"><span>Проценты округлены до целых; сумма может отличаться от 100% из-за округления.</span><span>Источник: Google Таблица, данные Нижнего Новгорода</span></footer>
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </main>
   </div>
